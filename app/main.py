@@ -42,6 +42,8 @@ def start():
     print(json.dumps(data))
 
     color = "#00FF00"
+    head = "bendr"
+    tail = "sharp"
 
     return start_response(color)
 
@@ -50,8 +52,8 @@ def start():
 def move():
     data = bottle.request.json
 
-    board_X_mid = data['board']['width'] / 2
-    board_Y_mid = data['board']['height'] / 2
+    #board_X_mid = data['board']['width'] / 2
+    #board_Y_mid = data['board']['height'] / 2
 
     xhead = int(data['you']['body'][0]['x'])
     yhead = int(data['you']['body'][0]['y'])
@@ -59,16 +61,19 @@ def move():
     rightBorder = int(data['board']['width']) - 1
 
     direction = ''
-    ranked_direction = []
-    directions = ['up', 'down', 'left', 'right']
+    fastest_direction = []
+    directions = ['up', 'down', 'left', 'right']        #Directions are global, do not change with snake direction
+    dangerous_direction = []    #ranked from most dangerous move to least dangerous
 
     """-----CREATE LIST OF COORDINATES TO AVOID-----"""
     avoid = []
     occupied = {}
+    borders = []
     for b in data['board']['snakes']:                #search through all snakes and store xy coord pairs in avoid
         for c in b['body'][:-1]:
             occupied = {'x':int(c['x']), 'y':int(c['y'])}
             avoid.append(occupied)
+
 
 
     """-----OBJECT AVOIDANCE-----"""
@@ -87,6 +92,11 @@ def move():
                     directions.remove('up')
                 elif xdif == 0 and ydif == -1 and 'down' in directions:     #below head
                     directions.remove('down')
+
+    def head_on_collision():
+
+        return
+
 
     def corners():
         if yhead == 0 and xhead == 0:
@@ -116,6 +126,107 @@ def move():
         else:
             return
 
+    """-----DANGEROUS MOVES-----"""
+
+    def dangerous():        # Handles cases where up to 2 cells on right, left or above are occupied
+        """
+        [(-1,-1),(0,-1),(1,-1)]
+        [(-1,0), (HEAD), (1,0)]
+        [(-1,1), (0, 1), (1,1)]
+        """
+
+        grid = [1,0,-1]     # coordinates wrt snakehead used for both x and y traversing left to right top to bottom
+        dangerous_cells = []
+        nearby_cells = []
+        cell = {}
+
+        xneck, yneck = int(data['you']['body'][1]['x']), int(data['you']['body'][1]['y'])
+        tail = data['you']['body'][int(len(data['you']['body'])) - 1]
+
+        for y in grid:
+            for x in grid:
+                if (x != 0 or y != 0) and ((xhead - x) != xneck or (yhead - y) != yneck):   #if not on head or neck node
+                    cell = {'x':xhead - x, 'y':yhead - y}   # create a list of coords for nearby cells, set all to safe
+                    nearby_cells.append(cell)
+
+        for i in avoid:
+            if i in nearby_cells:
+                dangerous_cells.append(i)
+
+        print "Dangerous cells: ", dangerous_cells
+
+        #dangerous cell counter variables
+        dleft = 0   #dangerous on left
+        dright = 0  #dangerous on right
+        dup = 0     #dangerous above
+        ddown = 0   #dangerous below
+
+
+        #NEED TO ADD BORDERS TO DANGEROUS CELLS LIST
+        #ADD tail awareness
+
+        for j in dangerous_cells:
+            xj,yj = xhead - j['x'], yhead - j['y']
+            if (xj >= 1 or xj == 0 or xj <= -1) and (yj >= 1 or yj == 0 or yj <= -1):
+                if xj >= 1:             #left of head
+                    if yj >= 1:
+                        dleft += 1
+                        dup += 1
+                    elif yj <= -1:
+                        dleft += 1
+                        ddown += 1
+                    elif yj == 0:
+                        dleft += 1
+                elif xj <=1:            #right of head
+                    if yj >= 1:
+                        dright += 1
+                        dup += 1
+                    elif yj <= -1:
+                        dright += 1
+                        ddown += 1
+                    elif yj == 0:
+                        dright += 1
+                elif xj == 0:           #above or below head
+                    if yj >= 1:
+                        dup += 1
+                    elif yj <= -1:
+                        ddown += 1
+
+
+        #Rank most dangerous directions
+        print "Left, right, up, down", dleft, dright, dup, ddown
+
+        #add fatal directions??
+
+        consider = [dleft, dright, dup, ddown]
+
+        for k in range(1,4):
+            if max(consider) != 0:
+                if dleft == max(consider) and 'left' not in dangerous_direction and dleft != 1:
+                    dangerous_direction.append('left')
+                    consider.remove(dleft)
+                elif dright == max(consider) and 'right' not in dangerous_direction and dright != 1:
+                    dangerous_direction.append('right')
+                    consider.remove(dright)
+                elif dup == max(consider) and 'up' not in dangerous_direction and dup != 1:
+                    dangerous_direction.append('up')
+                    consider.remove(dup)
+                elif ddown == max(consider) and 'down' not in dangerous_direction and ddown != 1:
+                    dangerous_direction.append('down')
+                    consider.remove(ddown)
+
+        if abs(xhead - tail['x']) <= 1 and abs(yhead - tail['y']) <= 1:     #if tail is within 1 radius of head
+            if tail['x'] == xhead and tail['y'] == yhead - 1 and 'up' in dangerous_direction:
+                dangerous_direction.remove('up')
+            elif tail['x'] == xhead and tail['y'] == yhead + 1 and 'down' in dangerous_direction:
+                dangerous_direction.remove('down')
+            elif tail['x'] == xhead - 1 and tail['y'] == yhead and 'left' in dangerous_direction:
+                dangerous_direction.remove('left')
+            elif tail['x'] == xhead + 1 and tail['y'] == yhead and 'right' in dangerous_direction:
+                dangerous_direction.remove('right')
+
+        return
+
 
     """-----MOVEMENT FUNCTIONS-----"""
 
@@ -125,46 +236,43 @@ def move():
         xabs,yabs = abs(xdir),abs(ydir)
                                                     #quadrant wrt head
         if xdir > 0 and ydir > 0 and xabs >= yabs:  #upper left x >= y
-            ranked_direction.append('left')
-            ranked_direction.append('up')
+            fastest_direction.append('left')
+            fastest_direction.append('up')
         elif xdir > 0 and ydir > 0 and xabs < yabs: #upper left x < y
-            ranked_direction.append('up')
-            ranked_direction.append('left')
+            fastest_direction.append('up')
+            fastest_direction.append('left')
                                                     #diagonals?
         elif xdir > 0 and ydir < 0 and xabs >= yabs:#lower left x >= y
-            ranked_direction.append('left')
-            ranked_direction.append('down')
+            fastest_direction.append('left')
+            fastest_direction.append('down')
         elif xdir > 0 and ydir < 0 and xabs < yabs: #lower left x < y
-            ranked_direction.append('down')
-            ranked_direction.append('left')
+            fastest_direction.append('down')
+            fastest_direction.append('left')
 
         elif xdir < 0 and ydir > 0 and xabs >= yabs:#upper right x >= y
-            ranked_direction.append('right')
-            ranked_direction.append('up')
+            fastest_direction.append('right')
+            fastest_direction.append('up')
         elif xdir < 0 and ydir > 0 and xabs < yabs: #upper right x < y
-            ranked_direction.append('up')
-            ranked_direction.append('right')
+            fastest_direction.append('up')
+            fastest_direction.append('right')
 
         elif xdir < 0 and ydir < 0 and xabs >= yabs:#lower right x >= y
-            ranked_direction.append('right')
-            ranked_direction.append('down')
+            fastest_direction.append('right')
+            fastest_direction.append('down')
         elif xdir < 0 and ydir < 0 and xabs < yabs: #lower right x < y
-            ranked_direction.append('down')
-            ranked_direction.append('right')
+            fastest_direction.append('down')
+            fastest_direction.append('right')
 
         elif xdir == 0 and ydir > 0:                #above
-            ranked_direction.append('up')
-            ranked_direction.append('up')
+            fastest_direction.append('up')
         elif xdir == 0 and ydir < 0:                #below
-            ranked_direction.append('down')
-            ranked_direction.append('down')
+            fastest_direction.append('down')
         elif xdir > 0 and ydir == 0:                #left
-            ranked_direction.append('left')
-            ranked_direction.append('left')
+            fastest_direction.append('left')
         elif xdir < 0 and ydir == 0:                #right
-            ranked_direction.append('right')
-            ranked_direction.append('right')
+            fastest_direction.append('right')
         return
+
 
     def nearest_food():
         closest = {'x':int(data['board']['food'][0]['x']), 'y':int(data['board']['food'][0]['y'])}
@@ -180,7 +288,7 @@ def move():
         return tail
 
         # add avoid trapping function for between snake and borders (arc ranking system from snakehead?? create a score to judge left or right action)
-        # handle potential head on collisions
+        # create danger ranking for moves. i.e compare occupied spaces left and right and add to dangerous list
 
         # count open spaces vs empty spaces in a quadrant, create a go_to_space function?
             # or count open spaces wrt direction snakehead can go?
@@ -199,7 +307,7 @@ def move():
 
     print data['turn']
     print data['you']['name']
-    #print data['you']['health']
+    print "Health: ",data['you']['health']
 
     if data['you']['health'] < 40:
         go_to(nearest_food())
@@ -208,6 +316,7 @@ def move():
     avoid_snakes()
     corners()
     walls()
+    dangerous()
 
 
     #compare directions list with ranked directions and if ranked direction[0] is in directions go that direction
@@ -218,21 +327,34 @@ def move():
 
     #Make this bit of code selecting from the different lists a function?
     #second direction didnt work
-    if len(ranked_direction) != 0:
-        for possible_dir in directions:
-            if possible_dir == ranked_direction[0]:
-                direction = ranked_direction[0]
-        if len(direction) == 0:                         #if no direction assigned yet (probs not the best way to do this)
-            for possible_dir2 in directions:            #not 100% sure grabbing the 2nd ranked direction works
-                if possible_dir2 == ranked_direction[1]:
-                    direction = ranked_direction[1]
-                else:
-                    direction = random.choice(directions)
-    else:
-        direction = random.choice(directions)
 
     print "Directions: ", directions
-    print "Ranked Directions: ", ranked_direction
+    print "Fastest Directions: ", fastest_direction
+    print "Dangerous moves: ",dangerous_direction
+
+
+
+    safe_direction = [i for i in directions if i not in dangerous_direction]
+    good_direction = [j for j in safe_direction if j in fastest_direction]
+
+
+
+    if len(good_direction) != 0:
+        direction = random.choice(good_direction)
+    else:
+        if len(safe_direction) != 0:
+            direction = random.choice(safe_direction)
+        else:
+            direction = random.choice(directions)
+
+    #this breaks chase_tail()
+    #add check if number of dangerous spaces is less than a certain number to take fastest?
+
+
+    #if only 2 directions use path_search()
+
+    print "Safe directions: ",safe_direction
+    print "Good directions: ",good_direction
     print "Choice: ", direction
     return move_response(direction)
 
