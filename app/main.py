@@ -140,10 +140,12 @@ def move():
         nearby_cells = []
         cell = {}
 
-        if data['you']['body'][1]:
-            xneck, yneck = int(data['you']['body'][1]['x']), int(data['you']['body'][1]['y'])
-        else:
-            xneck, yneck = int(data['you']['body'][0]['x']), int(data['you']['body'][0]['y'])
+
+        if data['turn'] > 1:
+            if data['you']['body'][1]:
+                xneck, yneck = int(data['you']['body'][1]['x']), int(data['you']['body'][1]['y'])
+            else:
+                xneck, yneck = int(data['you']['body'][0]['x']), int(data['you']['body'][0]['y'])
 
         tail = data['you']['body'][int(len(data['you']['body'])) - 1]
 
