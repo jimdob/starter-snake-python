@@ -140,18 +140,17 @@ def move():
         nearby_cells = []
         cell = {}
 
-
-        if data['turn'] > 1:
-            if data['you']['body'][1]:
-                xneck, yneck = int(data['you']['body'][1]['x']), int(data['you']['body'][1]['y'])
-            else:
-                xneck, yneck = int(data['you']['body'][0]['x']), int(data['you']['body'][0]['y'])
-
+        '''
+        if data['you']['body'][1]:
+            xneck, yneck = int(data['you']['body'][1]['x']), int(data['you']['body'][1]['y'])
+        else:
+            xneck, yneck = int(data['you']['body'][0]['x']), int(data['you']['body'][0]['y'])
+        '''
         tail = data['you']['body'][int(len(data['you']['body'])) - 1]
 
         for y in grid:
             for x in grid:
-                if (x != 0 or y != 0) and ((xhead - x) != xneck or (yhead - y) != yneck):   #if not on head or neck node
+                if (x != 0 or y != 0): #and ((xhead - x) != xneck or (yhead - y) != yneck):   #if not on head or neck node
                     cell = {'x':xhead - x, 'y':yhead - y}   # create a list of coords for nearby cells, set all to safe
                     nearby_cells.append(cell)
 
