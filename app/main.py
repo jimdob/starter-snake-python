@@ -140,12 +140,12 @@ def move():
         nearby_cells = []
         cell = {}
 
-        '''
-        if data['you']['body'][1]:
-            xneck, yneck = int(data['you']['body'][1]['x']), int(data['you']['body'][1]['y'])
-        else:
-            xneck, yneck = int(data['you']['body'][0]['x']), int(data['you']['body'][0]['y'])
-        '''
+        if len(data['you']['body']) >= 2:
+            if data['you']['body'][1]:
+                xneck, yneck = int(data['you']['body'][1]['x']), int(data['you']['body'][1]['y'])
+            else:
+                xneck, yneck = int(data['you']['body'][0]['x']), int(data['you']['body'][0]['y'])
+        
         tail = data['you']['body'][int(len(data['you']['body'])) - 1]
 
         for y in grid:
@@ -310,9 +310,9 @@ def move():
     #print data
     #print(json.dumps(data))
 
-    #print data['turn']
-    #print data['you']['name']
-    #print "Health: ",data['you']['health']
+    print data['turn']
+    print data['you']['name']
+    print "Health: ",data['you']['health']
 
     def hungry():
         if data['you']['health'] < 40:
@@ -338,9 +338,9 @@ def move():
 
 
 
-    #print "Directions: ", directions
-    #print "Fastest Directions: ", fastest_direction
-    #print "Dangerous moves: ",dangerous_direction
+    print "Directions: ", directions
+    print "Fastest Directions: ", fastest_direction
+    print "Dangerous moves: ",dangerous_direction
 
 
 
@@ -365,10 +365,10 @@ def move():
 
     #if only 2 directions use path_search()
 
-    #print "Safe directions: ",safe_direction
-    #print "Good directions: ",good_direction
-    #print "Choice: ", direction
-    print direction
+    print "Safe directions: ",safe_direction
+    print "Good directions: ",good_direction
+    print "Choice: ", direction
+
     if direction not in ['up', 'down', 'left', 'right']:
         return move_response('down')
     return move_response(direction)
