@@ -182,7 +182,7 @@ def move():
                         ddown += 1
                     elif yj == 0:
                         dleft += 1
-                elif xj <=1:            #right of head
+                elif xj <= -1:            #right of head
                     if yj >= 1:
                         dright += 1
                         dup += 1
