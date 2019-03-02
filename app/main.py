@@ -199,13 +199,13 @@ def move():
 
 
         #Rank most dangerous directions
-        #print "Left, right, up, down", dleft, dright, dup, ddown
+        print "Left, right, up, down", dleft, dright, dup, ddown
 
         #add fatal directions??
 
         consider = [dleft, dright, dup, ddown]
 
-        for k in range(1,4):
+        for k in range(1,3):
             if max(consider) != 0:
                 if dleft == max(consider) and 'left' not in dangerous_direction and dleft != 1:
                     dangerous_direction.append('left')
