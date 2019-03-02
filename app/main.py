@@ -153,7 +153,7 @@ def move():
             if i in nearby_cells:
                 dangerous_cells.append(i)
 
-        print "Dangerous cells: ", dangerous_cells
+        #print "Dangerous cells: ", dangerous_cells
 
         #dangerous cell counter variables
         dleft = 0   #dangerous on left
@@ -194,7 +194,7 @@ def move():
 
 
         #Rank most dangerous directions
-        print "Left, right, up, down", dleft, dright, dup, ddown
+        #print "Left, right, up, down", dleft, dright, dup, ddown
 
         #add fatal directions??
 
@@ -301,18 +301,21 @@ def move():
         # change headhunter duration based on snake length
 
 
-##  PRINT DATA  ##
+    ##  PRINT DATA  ##
     #print data
     #print(json.dumps(data))
 
-    print data['turn']
-    print data['you']['name']
-    print "Health: ",data['you']['health']
+    #print data['turn']
+    #print data['you']['name']
+    #print "Health: ",data['you']['health']
 
-    if data['you']['health'] < 40:
-        go_to(nearest_food())
-    else:
-        go_to(chase_tail())
+    def hungry():
+        if data['you']['health'] < 40:
+            go_to(nearest_food())
+        else:
+            go_to(chase_tail())
+
+    hungry()
     avoid_snakes()
     corners()
     walls()
@@ -328,9 +331,11 @@ def move():
     #Make this bit of code selecting from the different lists a function?
     #second direction didnt work
 
-    print "Directions: ", directions
-    print "Fastest Directions: ", fastest_direction
-    print "Dangerous moves: ",dangerous_direction
+
+
+    #print "Directions: ", directions
+    #print "Fastest Directions: ", fastest_direction
+    #print "Dangerous moves: ",dangerous_direction
 
 
 
@@ -355,10 +360,12 @@ def move():
 
     #if only 2 directions use path_search()
 
-    print "Safe directions: ",safe_direction
-    print "Good directions: ",good_direction
-    print "Choice: ", direction
+    #print "Safe directions: ",safe_direction
+    #print "Good directions: ",good_direction
+    #print "Choice: ", direction
     print direction
+    if direction not in ['up', 'down', 'left', 'right']:
+        return move_response('down')
     return move_response(direction)
 
 
