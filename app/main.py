@@ -344,8 +344,10 @@ def move():
     else:
         if len(safe_direction) != 0:
             direction = random.choice(safe_direction)
-        else:
+        elif len(directions) != 0:
             direction = random.choice(directions)
+        else:
+            direction = 'down'
 
     #this breaks chase_tail()
     #add check if number of dangerous spaces is less than a certain number to take fastest?
@@ -356,6 +358,7 @@ def move():
     print "Safe directions: ",safe_direction
     print "Good directions: ",good_direction
     print "Choice: ", direction
+    print direction
     return move_response(direction)
 
 
